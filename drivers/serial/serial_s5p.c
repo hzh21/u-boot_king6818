@@ -23,7 +23,7 @@
 enum {
 	PORT_S5P = 0,
 	PORT_S5L
-};
+};aa
 
 #define UFCON_FIFO_EN		BIT(0)
 #define UFCON_RX_FIFO_RESET	BIT(1)

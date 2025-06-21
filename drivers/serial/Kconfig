@@ -903,6 +903,10 @@ config S5P4418_PL011_SERIAL
 	  With this driver the UART-clocks are set to the appropriate rate
 	  (if not 'skip-init').
 
+config S5P6818_SERIAL
+	bool "Support for S5L6818 serial"
+	depends on ARCH_NEXELL
+
 config SANDBOX_SERIAL
 	bool "Sandbox UART support"
 	depends on SANDBOX

@@ -9,6 +9,7 @@
 #include <dm.h>
 #include <dt-structs.h>
 #include <dwmmc.h>
+#include <asm/arch/nexell.h>
 #include <log.h>
 #include <syscon.h>
 #include <asm/arch/reset.h>

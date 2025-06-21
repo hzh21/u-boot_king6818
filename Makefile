@@ -980,6 +980,10 @@ endif
 # Always append INPUTS so that arch config.mk's can add custom ones
 INPUTS-y += u-boot.srec u-boot.bin u-boot.sym System.map binary_size_check
 
+ifdef CONFIG_ARCH_S5P6818
+INPUTS-y += fip-nonsecure.img
+endif
+
 ifeq ($(CONFIG_SPL_FSL_PBL),y)
 INPUTS-$(CONFIG_RAMBOOT_PBL) += u-boot-with-spl-pbl.bin
 else
@@ -1437,6 +1441,23 @@ OBJCOPYFLAGS_u-boot.ldr.srec := -I binary -O srec
 
 u-boot.ldr.hex u-boot.ldr.srec: u-boot.ldr FORCE
 	$(call if_changed,zobjcopy)
+
+ifdef CONFIG_ARCH_S5P6818
+BINGEN = tools/nexell/SECURE_BINGEN
+FIP_CREATE = tools/fip_create/fip_create
+
+fip-nonsecure.bin: u-boot.bin tools
+	@if [ -e "$@" ]; then rm -f $@; fi
+	$(Q)$(FIP_CREATE) --dump --bl33 $< $@
+
+NSIH ?= tools/nexell/nsih/nanopi3.txt
+BINGEN_FLAGS := -l 0x7df00000 -e 0x00000000 -n $(NSIH)
+
+fip-nonsecure.img: fip-nonsecure.bin $(NSIH)
+	@echo "Creating \"$@\" (<-- $(NSIH))"
+	$(Q)$(BINGEN) -c S5P6818 -t 3rdboot $(BINGEN_FLAGS) -i $< -o $@
+
+endif
 
 ifdef CONFIG_SPL_LOAD_FIT
 MKIMAGEFLAGS_u-boot.img = -f auto -A $(ARCH) -T firmware -C none -O u-boot \

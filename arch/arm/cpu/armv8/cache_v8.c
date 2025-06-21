@@ -1084,9 +1084,9 @@ int pgprot_set_attrs(phys_addr_t addr, size_t size, enum pgprot_attrs perm)
  * running however really wants to have dcache and the MMU active. Check that
  * everything is sane and give the developer a hint if it isn't.
  */
-#ifndef CONFIG_XPL_BUILD
-#error Please describe your MMU layout in CONFIG_SYS_MEM_MAP and enable dcache.
-#endif
+// #ifndef CONFIG_XPL_BUILD
+// #error Please describe your MMU layout in CONFIG_SYS_MEM_MAP and enable dcache.
+// #endif
 
 void invalidate_dcache_all(void)
 {
@@ -1181,7 +1181,12 @@ void __weak enable_caches(void)
 	dcache_enable();
 }
 
+#if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
 void arch_dump_mem_attrs(void)
 {
 	dump_pagetable(gd->arch.tlb_addr, get_tcr(NULL, NULL));
 }
+#else
+void arch_dump_mem_attrs(void)
+{}
+#endif

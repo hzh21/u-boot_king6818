@@ -18,6 +18,9 @@
 #ifndef __BOOT0_H
 #define __BOOT0_H
 
+#ifdef CONFIG_ARM64
+	b reset
+#else
 	ARM_VECTORS
 	.space	0x30
 	.word	(_end - _start) + 20 * 1024	/* 0x50: load size
@@ -37,4 +40,5 @@
 _start:
 	ARM_VECTORS
 
+#endif /* CONFIG_ARM64 */
 #endif /* __BOOT0_H */

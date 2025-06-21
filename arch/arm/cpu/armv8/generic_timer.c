@@ -88,6 +88,7 @@ unsigned long notrace timer_read_counter(void)
 }
 #endif
 
+#ifndef CONFIG_ARCH_NEXELL
 uint64_t notrace get_ticks(void)
 {
 	unsigned long ticks = timer_read_counter();
@@ -96,6 +97,7 @@ uint64_t notrace get_ticks(void)
 
 	return ticks;
 }
+#endif
 
 unsigned long usec2ticks(unsigned long usec)
 {

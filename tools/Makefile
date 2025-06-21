@@ -220,6 +220,10 @@ HOSTLDLIBS_kwboot += -pthread
 HOSTLDLIBS_kwboot += \
 	$(shell pkg-config --libs tinfo 2> /dev/null || echo "-ltinfo")
 
+
+subdir-$(CONFIG_ARCH_NEXELL) += nexell
+subdir-$(CONFIG_ARCH_S5P6818) += fip_create
+
 ifdtool-objs := $(LIBFDT_OBJS) ifdtool.o
 hostprogs-$(CONFIG_X86) += ifdtool
 

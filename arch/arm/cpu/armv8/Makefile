@@ -13,6 +13,10 @@ ifndef CONFIG_$(PHASE_)SYS_DCACHE_OFF
 obj-y	+= cache_v8.o
 obj-y	+= cache.o
 endif
+ifdef CONFIG_ARCH_S5P6818
+obj-y	+= cache_v8.o
+obj-y	+= cache.o
+endif
 ifdef CONFIG_XPL_BUILD
 obj-$(CONFIG_ARMV8_SPL_EXCEPTION_VECTORS) += exceptions.o
 else
@@ -43,6 +47,7 @@ obj-$(CONFIG_FSL_LAYERSCAPE) += fsl-layerscape/
 obj-$(CONFIG_TARGET_HIKEY) += hisilicon/
 obj-$(CONFIG_ARMV8_PSCI) += psci.o
 obj-$(CONFIG_TARGET_BCMNS3) += bcmns3/
+obj-$(CONFIG_ARCH_S5P6818) += s5p6818/
 obj-$(CONFIG_XEN) += xen/
 obj-$(CONFIG_ARMV8_CE_SHA1) += sha1_ce_glue.o sha1_ce_core.o
 obj-$(CONFIG_ARMV8_CE_SHA256) += sha256_ce_glue.o sha256_ce_core.o

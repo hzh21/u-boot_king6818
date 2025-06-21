@@ -312,7 +312,8 @@ static void i2c_send_stop(struct nx_i2c_bus *bus)
 {
 	struct nx_i2c_regs *i2c = bus->regs;
 
-	if (IS_ENABLED(CONFIG_ARCH_S5P6818)) {
+#ifdef CONFIG_ARCH_S5P6818
+	// if (IS_ENABLED(CONFIG_ARCH_S5P6818)) {
 		unsigned int reg;
 
 		reg = readl(&i2c->iicstat);
@@ -321,7 +322,8 @@ static void i2c_send_stop(struct nx_i2c_bus *bus)
 
 		writel(reg, &i2c->iicstat);
 		i2c_clear_irq(i2c);
-	} else {  /* S5P4418 */
+	// } else {  /* S5P4418 */
+#else
 		writel(STOPCON_NAG, &i2c->iicstopcon);
 
 		i2c_clear_irq(i2c);
@@ -339,7 +341,8 @@ static void i2c_send_stop(struct nx_i2c_bus *bus)
 
 		/* Master Receive Mode Stop --> SDA becomes High */
 		writel(I2CSTAT_MRM, &i2c->iicstat);
-	}
+	// }
+#endif
 }
 
 static int wait_for_xfer(struct nx_i2c_regs *i2c)
