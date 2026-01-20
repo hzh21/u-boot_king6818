@@ -1,0 +1,35 @@
+name: Build King6818 U-Boot
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabi gcc-aarch64-linux-gnu make bc device-tree-compiler
+
+      - name: Compile U-Boot
+        run: |
+          # 1. 生成配置
+          make ARCH=arm s5p6818_gec6818_defconfig
+          
+          # 2. 编译主程序 (注意 S5P6818 的 U-Boot 本身是 32 位编译)
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j$(nproc)
+          
+          # 3. 生成 FIP 打包镜像 (包含 NISH 引导头和 2ndboot)
+          # 假设仓库中已有打包脚本 make_fip.sh
+          chmod +x ./make_fip.sh
+          ./make_fip.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: King6818-Uboot-Binary
+          path: |
+            u-boot.bin
+            fip-nonsecure.img
