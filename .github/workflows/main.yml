@@ -3,7 +3,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 解决 20.04 排队问题
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -12,26 +12,26 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            gcc-arm-linux-gnueabi \
             gcc-aarch64-linux-gnu \
             make bc device-tree-compiler \
             libssl-dev libgnutls28-dev uuid-dev python3-dev swig pkg-config
 
       - name: Configure U-Boot
         run: |
-          # 保持使用 arm 架构配置
-          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- s5p6818_gec6818_defconfig
+          # 核心修复：使用 ARCH=arm64 和 aarch64 编译器
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- s5p6818_gec6818_defconfig
 
       - name: Compile U-Boot
         run: |
-          # 关键修改：通过 KCFLAGS 强制编译器支持 ARMv8 指令集描述
-          # 解决 CurrentEL 和 sctlr_el1 无法识别的问题
-          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- \
-               KCFLAGS="-march=armv8-a -Wno-error" \
+          # 核心修复：解决 x18 寄存器识别问题
+          # 增加 KCFLAGS 抑制不必要的警告并确保 64 位指令集识别
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
+               KCFLAGS="-Wno-error -Wno-implicit-function-declaration" \
                -j$(nproc)
 
       - name: Package FIP
         run: |
+          # 打包脚本通常也需要 aarch64 环境支持
           if [ -f "./make_fip.sh" ]; then
             chmod +x ./make_fip.sh
             ./make_fip.sh
@@ -40,7 +40,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: King6818-Uboot-Fixed
+          name: King6818-Uboot-Aarch64
           path: |
             u-boot.bin
             fip-nonsecure.img
