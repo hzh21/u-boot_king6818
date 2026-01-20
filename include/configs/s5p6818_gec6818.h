@@ -94,17 +94,37 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"fdt_high=0xffffffffffffffff\0" \
 	"initrd_high=0xffffffffffffffff\0" \
-	"rootdev=" __stringify(CONFIG_ROOT_DEV) "\0" \
-	"bootpart=" __stringify(CONFIG_BOOT_PART) "\0" \
-	"rootpart=" __stringify(CONFIG_ROOT_PART) "\0" \
 	"kernel=Image\0" \
 	"dtb_name=s5p6818-king6818.dtb\0" \
 	"loadaddr=0x48000000\0" \
 	"dtb_addr=" __stringify(KERNEL_DTB_ADDR) "\0" \
-	"bootargs=console=ttyAMA0,115200n8 root=/dev/mmcblk0p${rootpart} rootwait rw cgroup_enable=memory swapaccount=1\0" \
-	"load_kernel=ext4load mmc ${rootdev}:${bootpart} ${loadaddr} ${kernel}\0" \
-	"load_dtb=ext4load mmc ${rootdev}:${bootpart} ${dtb_addr} ${dtb_name}\0" \
-	"mmcboot=run load_kernel; run load_dtb; booti ${loadaddr} - ${dtb_addr}\0" \
-	"bootcmd=run mmcboot\0"
+	\
+	/* 基础启动参数（不含 root） */ \
+	"base_args=console=ttyAMA0,115200n8 rootwait rw cgroup_enable=memory swapaccount=1\0" \
+	\
+	/* 通用加载与启动脚本 */ \
+	"mmcboot_logic=if ext4load mmc ${devnum}:${bootpart} ${loadaddr} ${kernel}; then " \
+			"ext4load mmc ${devnum}:${bootpart} ${dtb_addr} ${dtb_name}; " \
+			"booti ${loadaddr} - ${dtb_addr}; " \
+		"fi\0" \
+	\
+	/* SD 卡启动路径 (mmc 0, 分区通常是 1 和 2) */ \
+	"sd_boot=echo Checking SD Card...; " \
+		"if mmc dev 0; then " \
+			"setenv devnum 0; setenv bootpart 1; setenv rootpart 2; " \
+			"setenv bootargs ${base_args} root=/dev/mmcblk1p${rootpart}; " \
+			"run mmcboot_logic; " \
+		"fi\0" \
+	\
+	/* eMMC 启动路径 (mmc 2, 荣品结构 P7 和 P8) */ \
+	"emmc_boot=echo Checking eMMC...; " \
+		"if mmc dev 2; then " \
+			"setenv devnum 2; setenv bootpart 7; setenv rootpart 8; " \
+			"setenv bootargs ${base_args} root=/dev/mmcblk0p${rootpart}; " \
+			"run mmcboot_logic; " \
+		"fi\0" \
+	\
+	/* 最终引导命令：先跑 SD，跑不通（或没卡）再跑 eMMC */ \
+	"bootcmd=run sd_boot; run emmc_boot\0"
 
 #endif /* __CONFIG_H__ */
