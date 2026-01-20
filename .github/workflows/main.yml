@@ -1,8 +1,5 @@
 name: Build King6818 U-Boot
-on: 
-  push:
-    branches: [ main, master ]
-  workflow_dispatch: # 允许手动触发编译
+on: [push, workflow_dispatch]
 
 jobs:
   build:
@@ -18,43 +15,32 @@ jobs:
             gcc-arm-linux-gnueabi \
             gcc-aarch64-linux-gnu \
             make bc device-tree-compiler \
-            libssl-dev \
-            libgnutls28-dev \
-            uuid-dev \
-            python3-dev \
-            swig \
-            pkg-config
+            libssl-dev libgnutls28-dev uuid-dev python3-dev swig pkg-config
 
       - name: Configure U-Boot
         run: |
-          # 使用针对 GEC6818 适配的配置文件
+          # 保持使用 arm 架构配置
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- s5p6818_gec6818_defconfig
 
       - name: Compile U-Boot
         run: |
-          # 核心编译步骤：
-          # 1. 使用 32 位交叉编译器（S5P6818 U-Boot 虽引导 64 位，但自身多为 32 位编译）
-          # 2. KCFLAGS 忽略部分现代编译器产生的警告，防止报错中断
-          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- KCFLAGS="-Wno-error" -j$(nproc)
+          # 关键修改：通过 KCFLAGS 强制编译器支持 ARMv8 指令集描述
+          # 解决 CurrentEL 和 sctlr_el1 无法识别的问题
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- \
+               KCFLAGS="-march=armv8-a -Wno-error" \
+               -j$(nproc)
 
-      - name: Package FIP (NISH + 2ndboot)
+      - name: Package FIP
         run: |
-          # 检查仓库中是否存在打包脚本
           if [ -f "./make_fip.sh" ]; then
             chmod +x ./make_fip.sh
             ./make_fip.sh
-          elif [ -f "./fusing.sh" ]; then
-            chmod +x ./fusing.sh
-            ./fusing.sh
-          else
-            echo "Warning: Packing script not found, only raw u-boot.bin will be available."
           fi
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: King6818-Uboot-Output
+          name: King6818-Uboot-Fixed
           path: |
             u-boot.bin
             fip-nonsecure.img
-            *uboot*
