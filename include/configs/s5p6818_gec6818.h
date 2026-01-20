@@ -81,9 +81,20 @@
 /*-----------------------------------------------------------------------
  * SD/MMC 基础设置
  */
+/* 先撤销 Kconfig 里的默认定义，防止重定义报错 */
+#ifdef CONFIG_ROOT_DEV
+#undef CONFIG_ROOT_DEV
+#endif
+#ifdef CONFIG_BOOT_PART
+#undef CONFIG_BOOT_PART
+#endif
+#ifdef CONFIG_ROOT_PART
+#undef CONFIG_ROOT_PART
+#endif
+
 #define CONFIG_ROOT_DEV			2   /* 默认从 eMMC (2) 启动 */
-#define CONFIG_BOOT_PART		7   /* 你的内核 Image 和 DTB 放在第 7 分区 */
-#define CONFIG_ROOT_PART		8   /* 你的 rootfs 放在第 8 分区 */
+#define CONFIG_BOOT_PART		7   /* 内核在 P7 */
+#define CONFIG_ROOT_PART		8   /* 系统在 P8 */
 
 /*-----------------------------------------------------------------------
  * ENV 启动命令核心适配
