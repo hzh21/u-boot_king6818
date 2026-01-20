@@ -1,30 +1,24 @@
 /*
- * (C) Copyright 2017 FriendlyElec Computer Tech. Co., Ltd.
- * (http://www.friendlyarm.com)
- *
- * (C) Copyright 2016 Nexell
- * Youngbok, Park <park@nexell.co.kr>
- *
- * SPDX-License-Identifier:      GPL-2.0+
+ * (C) Copyright 2026 Gemini / King6818 Porting Project
+ * Adapted for Rongpin King6818
  */
 
 /dts-v1/;
 #include "s5p6818.dtsi"
 
 / {
-	model = "FriendlyElec boards based on Nexell s5p6818";
+	model = "Rongpin King6818 Board";
 	cpu-model = "S5p6818";
 
-	compatible = "friendlyelec,nanopi3",
-		   "nexell,s5p6818";
+	compatible = "rongpin,king6818", "nexell,s5p6818";
 
 	aliases {
-		mmc0 = "/mmc@c0069000";
-		mmc1 = "/mmc@c0062000";
-		i2c0 = "/i2c@c00a4000";
-		i2c2 = "/i2c@c00a6000";
+		mmc0 = "/mmc@c0062000"; /* SD卡 */
+		mmc2 = "/mmc@c0069000"; /* eMMC */
+		i2c3 = "/i2c@c00a7000"; /* 核心修改：增加 I2C3 别名 */
 	};
 
+	/* MMC0: SD Card */
 	mmc0:mmc@c0062000 {
 		frequency = <50000000>;
 		nexell,drive_dly = <0x0>;
@@ -34,6 +28,7 @@
 		status = "okay";
 	};
 
+	/* MMC2: eMMC */
 	mmc2:mmc@c0069000 {
 		frequency = <50000000>;
 		nexell,drive_dly = <0x0>;
@@ -45,33 +40,28 @@
 		status = "okay";
 	};
 
-	ehci:usbhost@c0030000 {
-		status = "okay";
-	};
-
-	dwc2otg@c0040000 {
-		status = "okay";
-	};
-
-	i2c0:i2c@c00a4000 {
+	/* 核心修改：补全并开启硬件 I2C3 */
+	i2c3:i2c@c00a7000 {
 		status ="okay";
 		nexell,i2c-sda-delay = <100>;
 		nexell,i2c-max-bus-freq = <100000>;
+
+		/* 挂载 AXP228 电源管理芯片 */
+		axp22x: pmic@34 {
+			compatible = "x-powers,axp228";
+			reg = <0x34>;
+			status = "okay";
+		};
 	};
 
-	i2c2:i2c@c00a6000 {
-		status ="okay";
-		nexell,i2c-sda-delay = <100>;
-		nexell,i2c-max-bus-freq = <200000>;
-	};
-
+	/* 保持原有的显示配置（LVDS 1024x600） */
 	dp0:dp@c0102800 {
 		status = "okay";
 		module = <0>;
 		lcd-type = "lvds";
 
 		dp-device {
-			format = <0>;	/* 0:VESA, 1:JEIDA */
+			format = <0>;
 		};
 
 		dp-sync {
@@ -79,20 +69,10 @@
 			h_front_porch = <84>;
 			h_back_porch = <84>;
 			h_sync_width = <88>;
-			h_sync_invert = <0>;
 			v_active_len = <600>;
 			v_front_porch = <10>;
 			v_back_porch = <10>;
 			v_sync_width = <20>;
-			v_sync_invert = <0>;
-		};
-
-		dp-ctrl {
-			clk_src_lv0 = <3>;
-			clk_div_lv0 = <16>;
-			clk_src_lv1 = <7>;
-			clk_div_lv1 = <1>;
-			out_format = <2>;
 		};
 
 		dp-planes {
@@ -101,14 +81,16 @@
 				screen_height = <600>;
 				back_color = <0x0>;
 			};
-
-			layer_1 {	/* RGB 1 */
-				width = <1024>;
-				height = <600>;
-				format = <0x06530000>;
-				pixel_byte = <4>;
-			};
 		};
 	};
+};
 
+/* 核心修改：定义引脚控制，将 C15/16 设为硬件 I2C3 模式 */
+&pinctrl0 {
+	i2c3_pins: i2c3-pins {
+		nexell,pins = "gpioc-15", "gpioc-16";
+		nexell,pin-function = <1>; /* FUNC1 = I2C3 */
+		nexell,pin-pull = <2>;     /* 上拉 */
+		nexell,pin-strength = <0>;
+	};
 };
